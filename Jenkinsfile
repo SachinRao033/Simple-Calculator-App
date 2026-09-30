@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         PROJECT_DIR = "/home/ubuntu/Simple-Calculator-App"
-        #VITE_API_URL = "http://13.205.69.179:8000"
+        VITE_API_URL = "http://13.205.69.179:8000"
     }
 
     stages {
