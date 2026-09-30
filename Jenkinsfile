@@ -17,21 +17,20 @@ pipeline {
         stage('Copy Project') {
             steps {
                 sh '''
+                    echo "======================================"
                     echo "Jenkins Workspace: ${WORKSPACE}"
                     echo "Deployment Directory: ${PROJECT_DIR}"
+                    echo "======================================"
 
                     sudo mkdir -p "${PROJECT_DIR}"
-                    sudo chmod 755 /home/ubuntu
 
-                    sudo rsync -av --delete \
-                        --exclude='.git' \
-                        --exclude='node_modules' \
-                        --exclude='dist' \
-                        "${WORKSPACE}/" "${PROJECT_DIR}/"
+                    # Copy project files without deleting existing files
+                    sudo cp -r "${WORKSPACE}/." "${PROJECT_DIR}/"
 
                     sudo chown -R jenkins:jenkins "${PROJECT_DIR}"
 
                     echo "Project copied successfully"
+
                     echo "===== Project Files ====="
                     ls -la "${PROJECT_DIR}"
                 '''
@@ -49,7 +48,7 @@ POSTGRES_USER=calculator
 POSTGRES_PASSWORD=calculator123
 DATABASE_URL=postgresql://calculator:calculator123@postgres:5432/calculator_db
 CORS_ORIGINS=http://13.205.69.179:3000
-VITE_API_URL=${VITE_API_URL}
+VITE_API_URL=http://13.205.69.179:8000
 EOF
 
                     echo "Environment file created"
@@ -65,13 +64,11 @@ EOF
                 sh '''
                     cd "${PROJECT_DIR}"
 
-                    echo "Stopping old containers..."
+                    echo "===== Stopping Old Containers ====="
 
                     docker compose down || true
 
-                    echo "Removing unused Docker resources..."
-
-                    docker system prune -af --volumes || true
+                    echo "Old containers stopped"
                 '''
             }
         }
@@ -81,7 +78,9 @@ EOF
                 sh '''
                     cd "${PROJECT_DIR}"
 
-                    echo "===== Building Docker Images ====="
+                    echo "======================================"
+                    echo "Building Docker Images"
+                    echo "======================================"
 
                     docker compose build --no-cache
                 '''
@@ -93,9 +92,13 @@ EOF
                 sh '''
                     cd "${PROJECT_DIR}"
 
-                    echo "===== Starting Containers ====="
+                    echo "======================================"
+                    echo "Starting Containers"
+                    echo "======================================"
 
                     docker compose up -d
+
+                    echo "Containers started"
                 '''
             }
         }
@@ -108,21 +111,45 @@ EOF
 
                     cd "${PROJECT_DIR}"
 
-                    echo "===== Docker Compose Status ====="
+                    echo "======================================"
+                    echo "Docker Compose Status"
+                    echo "======================================"
+
                     docker compose ps
 
-                    echo "===== Running Containers ====="
+                    echo "======================================"
+                    echo "Running Containers"
+                    echo "======================================"
+
                     docker ps
 
-                    echo "===== Backend Health ====="
+                    echo "======================================"
+                    echo "Backend Health Check"
+                    echo "======================================"
+
                     curl -f http://localhost:8000/docs > /dev/null
 
                     echo "Backend is healthy"
 
-                    echo "===== Frontend Health ====="
+                    echo "======================================"
+                    echo "Frontend Health Check"
+                    echo "======================================"
+
                     curl -f http://localhost:3000 > /dev/null
 
                     echo "Frontend is healthy"
+
+                    echo "======================================"
+                    echo "Calculator API Test"
+                    echo "======================================"
+
+                    curl -f -X POST \
+                        http://localhost:8000/api/calculate \
+                        -H "Content-Type: application/json" \
+                        -d '{"expression":"589*6"}'
+
+                    echo ""
+                    echo "Calculator API is working"
 
                     echo "======================================"
                     echo "Application deployed successfully!"
@@ -136,6 +163,8 @@ EOF
 
         success {
             echo "SUCCESS: Calculator Web App deployed successfully!"
+            echo "Frontend: http://13.205.69.179:3000"
+            echo "Backend:  http://13.205.69.179:8000/docs"
         }
 
         failure {
@@ -149,4 +178,3 @@ EOF
             '''
         }
     }
-}
