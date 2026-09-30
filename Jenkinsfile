@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         PROJECT_DIR = "/home/ubuntu/Simple-Calculator-App"
-        VITE_API_URL = "http://13.205.69.179:8000"
+        #VITE_API_URL = "http://13.205.69.179:8000"
     }
 
     stages {
@@ -37,7 +37,7 @@ pipeline {
             }
         }
 
-        stage('Create Environment Files') {
+        stage('Create Environment File') {
             steps {
                 sh '''
                     cd "${PROJECT_DIR}"
@@ -164,7 +164,7 @@ EOF
         success {
             echo "SUCCESS: Calculator Web App deployed successfully!"
             echo "Frontend: http://13.205.69.179:3000"
-            echo "Backend:  http://13.205.69.179:8000/docs"
+            echo "Backend: http://13.205.69.179:8000/docs"
         }
 
         failure {
@@ -178,3 +178,4 @@ EOF
             '''
         }
     }
+}
